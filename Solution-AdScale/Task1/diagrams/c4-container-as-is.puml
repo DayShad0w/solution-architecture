@@ -1,0 +1,74 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_LEFT_RIGHT()
+
+title C4 Container — AdScale AS-IS
+
+Person(advertiser, "Рекламодатель", "Кампании, бюджеты и ставки в кабинете")
+Person_Ext(endUser, "Пользователь сайта или приложения", "Видит рекламу и кликает по баннеру")
+
+System_Ext(dspPartner, "DSP-партнёр", "Bid request и bid response по OpenRTB")
+System_Ext(paymentGateway, "Платёжный шлюз", "Пополнение рекламных бюджетов")
+
+System_Boundary(monolith, "AdScale Monolith (C++ / Go / Python / Node.js)") {
+    Container(adServer, "Ad Server", "C++, Go", "HTTP, определение пользователя, подбор кандидатов")
+    Container(auctionEngine, "Auction Engine", "C++", "Правила, веса, победитель аукциона")
+    Container(deliveryService, "Delivery Service", "Node.js", "HTML/JS баннера и HTTP-ответ")
+    Container(statsService, "Statistics Service", "Python", "Запись кликов и показов")
+    Container(financialService, "Financial Service", "Go", "Списания, счета, балансы")
+    Container(analyticsService, "Analytics Service", "Python", "Аналитические SQL по production-БД")
+    Container(adCabinet, "Advertiser Dashboard", "Node.js", "Кабинет рекламодателя")
+}
+
+ContainerDb(postgres, "PostgreSQL", "Одна инстанция", "Кампании, ставки, события, финансы, аналитика")
+
+Rel(dspPartner, adServer, "Bid request / response", "HTTPS / OpenRTB")
+Rel(endUser, deliveryService, "Показ и клик", "HTTPS")
+Rel(advertiser, adCabinet, "Ведёт кампании и бюджеты", "HTTPS")
+Rel(adCabinet, paymentGateway, "Пополнение бюджета", "HTTPS")
+
+Rel(adServer, auctionEngine, "Кандидаты", "синхронный вызов")
+Rel(auctionEngine, deliveryService, "Победитель", "синхронный вызов")
+Rel(deliveryService, statsService, "Показ или клик", "синхронный вызов")
+Rel(adCabinet, financialService, "Финансовые операции", "синхронный вызов")
+Rel(adCabinet, analyticsService, "Запрос отчёта", "синхронный вызов")
+
+Rel(auctionEngine, postgres, "Читает ставки и кампании", "синхронно")
+Rel(adServer, postgres, "Читает таргетинг", "синхронно")
+Rel(statsService, postgres, "Прямая запись событий", "синхронно")
+Rel(financialService, postgres, "Транзакции и балансы", "синхронно")
+Rel(analyticsService, postgres, "Тяжёлые отчёты", "синхронно")
+Rel(adCabinet, postgres, "CRUD", "синхронно")
+
+note right of auctionEngine
+  Критический путь.
+  Синхронная БД при требовании
+  P95 не выше 100 ms.
+  Факт: 110-120 ms.
+end note
+
+note right of postgres
+  Одна инстанция.
+  Нет HA и read replica.
+  OLTP и аналитика вместе.
+end note
+
+note bottom of statsService
+  Запись без буфера.
+  Конкурирует с аукционом за БД.
+end note
+
+note bottom of analyticsService
+  Тяжёлые запросы
+  по production-БД.
+end note
+
+legend right
+  Пик: 15 000 RPS
+  P95: 110-120 ms при норме не выше 100 ms
+  Деплой ручной, без контейнеров
+  Кэша и очередей нет
+endlegend
+@enduml

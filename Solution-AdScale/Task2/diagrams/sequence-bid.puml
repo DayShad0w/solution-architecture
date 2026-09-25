@@ -1,0 +1,39 @@
+@startuml
+title Bid request новой DSP
+
+actor "DSP" as dsp
+participant "Envoy" as gw
+participant "Bidding Service" as bid
+participant "L1" as l1
+database "Redis" as redis
+queue "Kafka" as kafka
+
+dsp -> gw: POST /openrtb/2.6/bid\nmTLS, BidRequest
+gw -> gw: сертификат, token bucket, дедлайн
+
+alt лимит или сертификат
+  gw --> dsp: 204
+else можно в аукцион
+  gw -> bid: BidRequest + дедлайн\nтаймаут не больше 70 ms
+  bid -> bid: разбор, отсечение по tmax
+  bid -> l1: индекс кандидатов
+  alt промах L1 и дедлайн позволяет
+    bid -> redis: GET кандидатов\nтаймаут 4 ms
+    redis --> bid: проекция или таймаут
+  end
+  bid -> bid: статус, pacing, правила
+  alt есть победитель
+    bid --> gw: 200 BidResponse
+    gw --> dsp: 200
+  else нет ставки или не успели
+    bid --> gw: 204
+    gw --> dsp: 204
+  end
+  bid ->> kafka: выборка аукциона\nуже после ответа клиенту
+end
+
+note over bid, redis
+  Campaign, Finance и PostgreSQL
+  на этой диаграмме отсутствуют нарочно.
+end note
+@enduml

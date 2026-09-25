@@ -1,0 +1,47 @@
+@startuml
+title CQRS: модель чтения ставок и модель чтения отчётов
+
+package "Запись рекламы и денег" {
+  database "Campaign PostgreSQL" as camp
+  database "Finance PostgreSQL" as fin
+}
+
+queue "campaign.lifecycle" as tCamp
+queue "budget.snapshots" as tBudget
+component "Проектор" as proj
+database "Redis + L1" as redis
+component "Bidding Service\nмодель чтения" as bid
+
+camp --> tCamp : команда сохранена
+fin --> tBudget : остаток или стоп
+tCamp --> proj
+tBudget --> proj
+proj --> redis : BidCandidate, индекс, stop
+bid --> redis : чтение на аукционе
+
+package "Запись событий" {
+  queue "tracking.*" as track
+  database "ClickHouse raw" as raw
+  component "stats-loader" as loader
+}
+
+package "Чтение отчётов" {
+  database "ClickHouse marts" as marts
+  component "Analytics Service" as api
+}
+
+track --> loader
+loader --> raw
+raw --> marts : витрины
+api --> marts
+
+note bottom of bid
+  Аукцион не читает PostgreSQL
+  и не читает сырые события.
+end note
+
+note bottom of api
+  Кабинет не сканирует
+  таблицу показов напрямую.
+end note
+@enduml

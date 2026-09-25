@@ -1,0 +1,87 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_TOP_DOWN()
+
+title C4 Container — AdScale TO-BE, 12 месяцев
+
+Person(advertiser, "Рекламодатель", "Кампании, бюджеты, отчёты")
+Person_Ext(endUser, "Пользователь", "Показы и клики")
+
+System_Ext(dsp, "DSP-площадки", "OpenRTB, несколько партнёров")
+System_Ext(payment, "Платёжный шлюз", "Пополнение бюджетов")
+
+System_Boundary(edge, "Входы") {
+    Container(rtbGw, "RTB API Gateway", "Envoy", "Только OpenRTB: личность партнёра, лимит, таймаут, размыкатель")
+    Container(cabinetGw, "Cabinet BFF", "Node.js", "Вход кабинета, отдельно от RTB")
+}
+
+System_Boundary(hot, "Горячий контур") {
+    Container(bidding, "Bidding Service", "Go", "OpenRTB, отбор, аукцион, bid response")
+    Container(tracking, "Tracking Ingress", "Go", "Показ, клик, win-notice")
+    Container(creative, "Creative Delivery", "Node.js", "Сборка баннера при сохранении креатива")
+}
+
+System_Boundary(projection, "Проекция") {
+    Container(projector, "Bidding Projector", "Go", "Читает Kafka, обновляет Redis и рассылает инвалидацию")
+}
+
+System_Boundary(domain, "Учёт и кабинет") {
+    Container(campaign, "Campaign Service", "Go", "Кампании, таргетинг, ставки, метаданные креативов")
+    Container(finance, "Finance Service", "Go", "Балансы, счета, идемпотентные списания")
+    Container(analytics, "Analytics Service", "Python", "API отчётов")
+}
+
+ContainerDb(redis, "Redis Cluster", "Redis", "Проекция кандидатов, баннеры, остатки, частотные ограничения")
+ContainerQueue(kafka, "Kafka", "Apache Kafka", "События и изменения конфигурации")
+ContainerDb(pgCampaign, "Campaign DB", "PostgreSQL", "Система учёта рекламы")
+ContainerDb(pgFinance, "Finance DB", "PostgreSQL", "Журнал денег и балансы")
+ContainerDb(chStats, "Statistics Store", "ClickHouse", "Сырые показы и клики")
+ContainerDb(chAnalytics, "Analytics Store", "ClickHouse", "Витрины отчётов")
+
+Rel(dsp, rtbGw, "Bid request / response", "HTTPS / OpenRTB")
+Rel(rtbGw, bidding, "Запрос с дедлайном", "HTTP")
+Rel(bidding, redis, "Кандидаты и остаток бюджета", "RESP")
+Rel_Back(bidding, kafka, "Журнал аукциона после ответа", "async")
+
+Rel(endUser, tracking, "Показ и клик", "HTTPS")
+Rel(tracking, kafka, "Событие", "Kafka")
+
+Rel(advertiser, cabinetGw, "Работа в кабинете", "HTTPS")
+Rel(cabinetGw, campaign, "CRUD кампаний", "HTTPS / JSON")
+Rel(cabinetGw, finance, "Бюджет и счета", "HTTPS / JSON")
+Rel(cabinetGw, analytics, "Отчёты", "HTTPS / JSON")
+Rel(finance, payment, "Пополнение", "HTTPS")
+
+Rel(campaign, pgCampaign, "Учёт рекламы", "SQL")
+Rel(finance, pgFinance, "Учёт денег", "SQL")
+Rel(campaign, kafka, "Изменение кампании", "Kafka, compacted")
+Rel(finance, kafka, "Остаток и стоп бюджета", "Kafka, compacted")
+Rel(creative, redis, "Готовая разметка", "RESP")
+Rel(creative, campaign, "Креатив сохранён", "событие")
+
+Rel(projector, kafka, "campaign.lifecycle, budget.snapshots", "consumer")
+Rel(projector, redis, "Снимок и инвалидация", "RESP")
+
+Rel(kafka, chStats, "Загрузка событий", "consumer")
+Rel(analytics, chAnalytics, "Только чтение витрин", "SQL")
+Rel(chStats, chAnalytics, "Материализованные витрины", "внутри ClickHouse")
+
+note right of bidding
+  Нет синхронных вызовов
+  Campaign, Finance и PostgreSQL.
+  Отказ данных = no-bid.
+end note
+
+note bottom of rtbGw
+  Кабинет сюда не маршрутизируется.
+  Критичный и человеческий трафик разделены.
+end note
+
+legend right
+  Мощность: 50 000 RPS
+  SLA контура ставок: 99,9%
+  Два региона: ставки active-active, финансы active-passive
+endlegend
+@enduml

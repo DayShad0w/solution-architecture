@@ -1,0 +1,34 @@
+@startuml
+title Показ и списание, вне пути ставки
+
+actor "Браузер или плеер" as user
+participant "Tracking Ingress" as tr
+queue "Kafka" as kafka
+participant "Finance consumer" as fin
+database "Finance PostgreSQL" as pg
+participant "Загрузчик статистики" as loader
+database "ClickHouse" as ch
+
+user -> tr: GET показ / клик / win-notice\nподписанный URL
+tr -> tr: проверка подписи и схемы
+tr -> kafka: Avro-событие\nack обязателен
+alt брокер подтвердил
+  kafka --> tr: ack
+  tr --> user: 204
+else брокер недоступен
+  tr --> user: 503\nпиксель можно повторить
+end
+
+kafka -> fin: чтение группы finance-ledger
+fin -> pg: вставка проводки по ключу события
+alt новая проводка
+  pg --> fin: ок, баланс обновлён
+else дубликат ключа
+  pg --> fin: конфликт, считаем успехом
+end
+fin -> kafka: commit offset
+
+kafka -> loader: чтение группы stats-loader
+loader -> ch: пакет событий
+loader -> kafka: commit offset
+@enduml

@@ -1,0 +1,41 @@
+<mxfile host="draw.io" type="device">
+<diagram name="Компоненты Bidding Service">
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1600" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="bg" value="RTB API Gateway" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fontColor=#444444;fillColor=none;strokeColor=#444444;dashed=1;dashPattern=8 4;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;container=1;collapsible=0;" vertex="1" parent="1"><mxGeometry x="40" y="30" width="270" height="140" as="geometry"/></mxCell>
+<mxCell id="r1" value="Маршрут OpenRTB" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bg"><mxGeometry x="20" y="35" width="220" height="40" as="geometry"/></mxCell>
+<mxCell id="r2" value="mTLS и лимит" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bg"><mxGeometry x="20" y="85" width="220" height="40" as="geometry"/></mxCell>
+<mxCell id="bs" value="Bidding Service" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fontColor=#444444;fillColor=none;strokeColor=#444444;dashed=1;dashPattern=8 4;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;container=1;collapsible=0;" vertex="1" parent="1"><mxGeometry x="40" y="200" width="560" height="350" as="geometry"/></mxCell>
+<mxCell id="h1" value="Приём HTTP" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="20" y="35" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="h2" value="Разбор OpenRTB и дедлайн" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="220" y="35" width="200" height="40" as="geometry"/></mxCell>
+<mxCell id="h3" value="Индекс кандидатов L1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="20" y="100" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="h4" value="Клиент Redis" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="220" y="100" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="h5" value="Правила аукциона" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="120" y="170" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="h6" value="Pacing бюджета" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="340" y="170" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="h7" value="Сборка BidResponse" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="120" y="240" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="h8" value="Буфер выборки аукциона" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="340" y="240" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="h9" value="Прогрев проекции" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="bs"><mxGeometry x="20" y="290" width="180" height="40" as="geometry"/></mxCell>
+<mxCell id="redis" value="Redis" style="shape=cylinder3;size=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#E6D0B8;strokeColor=#B09070;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="680" y="200" width="140" height="50" as="geometry"/></mxCell>
+<mxCell id="kafka" value="Kafka rtb.auction" style="shape=mxgraph.flowchart.direct_data;whiteSpace=wrap;html=1;fontSize=10;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="680" y="310" width="160" height="45" as="geometry"/></mxCell>
+<mxCell id="2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="r1" target="r2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="3" value="запрос + дедлайн" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="r2" target="h1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h1" target="h2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h2" target="h3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="6" value="промах или тесный бюджет" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h3" target="h4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h4" target="redis" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h2" target="h6" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h3" target="h5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h6" target="h5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h5" target="h7" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="12" value="200 или 204" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h7" target="h1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="13" value="после ответа" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h1" target="h8" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="14" value="best effort" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h8" target="kafka" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="15" value="снимок до readiness" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h9" target="redis" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="h9" target="h3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>

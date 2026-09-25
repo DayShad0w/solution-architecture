@@ -1,0 +1,39 @@
+@startuml
+title Компоненты Bidding Service
+
+package "RTB API Gateway" {
+  [Маршрут OpenRTB] as route
+  [mTLS и лимит] as guard
+}
+
+package "Bidding Service" {
+  [Приём HTTP] as http
+  [Разбор OpenRTB и дедлайн] as parse
+  [Индекс кандидатов L1] as l1
+  [Клиент Redis] as redisclient
+  [Правила аукциона] as auction
+  [Pacing бюджета] as pacing
+  [Сборка BidResponse] as build
+  [Буфер выборки аукциона] as sample
+  [Прогрев проекции] as warm
+}
+
+database "Redis" as redis
+queue "Kafka rtb.auction" as kafka
+
+route --> guard
+guard --> http : один запрос с дедлайном
+http --> parse
+parse --> l1
+l1 --> redisclient : только промах или тесный бюджет
+redisclient --> redis
+parse --> pacing
+l1 --> auction
+pacing --> auction
+auction --> build
+build --> http : 200 или 204
+http --> sample : после ответа
+sample --> kafka : best effort
+warm --> redis : снимок до readiness
+warm --> l1
+@enduml

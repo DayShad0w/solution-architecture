@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+title Данные AdScale: система учёта у каждого сервиса
+
+Container(bidding, "Bidding Service", "Go", "Без своей БД учёта")
+Container(projector, "Проектор", "Go", "Собирает модель чтения")
+Container(tracking, "Tracking Ingress", "Go", "Принимает события")
+Container(campaign, "Campaign Service", "Go", "Учёт рекламы")
+Container(finance, "Finance Service", "Go", "Учёт денег")
+Container(analytics, "Analytics Service", "Python", "Только чтение витрин")
+Container(loader, "Stats loader", "Go", "Группа stats-loader")
+
+ContainerDb(redis, "Redis Cluster", "Проекция", "Кандидаты, adm, остаток, частота")
+ContainerQueue(kafka, "Kafka", "Журнал", "События и compacted-конфигурация")
+ContainerDb(pgCampaign, "Campaign PostgreSQL", "Primary + sync replica", "Нормализованная реклама")
+ContainerDb(pgFinance, "Finance PostgreSQL", "Primary + sync replica", "Проводки и балансы")
+ContainerDb(chRaw, "ClickHouse raw", "Шарды по event_id", "Показы и клики")
+ContainerDb(chMart, "ClickHouse marts", "Витрины", "Отчёты кабинета")
+
+Rel(campaign, pgCampaign, "Запись и чтение учёта", "SQL")
+Rel(finance, pgFinance, "Проводка", "SQL")
+Rel(campaign, kafka, "campaign.lifecycle", "Avro")
+Rel(finance, kafka, "budget.snapshots", "Avro")
+Rel(tracking, kafka, "tracking.*", "acks=all")
+Rel(projector, kafka, "Читает конфигурацию", "consumer")
+Rel(projector, redis, "Снимок и инвалидация", "RESP")
+Rel(bidding, redis, "Только модель чтения", "RESP")
+Rel(loader, kafka, "Своя группа", "consumer")
+Rel(loader, chRaw, "Пакет событий", "insert")
+Rel(chRaw, chMart, "Материализованные витрины", "внутри кластера")
+Rel(analytics, chMart, "Чтение", "SQL")
+
+note bottom of bidding
+  PostgreSQL ставок нет.
+  Потеря Redis лечится пересборкой снимка.
+end note
+@enduml

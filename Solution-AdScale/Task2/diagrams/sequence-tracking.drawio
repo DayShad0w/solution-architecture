@@ -1,0 +1,30 @@
+<mxfile host="draw.io" type="device">
+<diagram name="Sequence — Показ и списание">
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1600" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="usr" value="Браузер / плеер" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#DDEEFF;strokeColor=#08427B;participant=umlActor;" vertex="1" parent="1"><mxGeometry x="60" y="40" width="100" height="550" as="geometry"/></mxCell>
+<mxCell id="tr" value="Tracking Ingress" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="240" y="40" width="100" height="550" as="geometry"/></mxCell>
+<mxCell id="kf" value="Kafka" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="420" y="40" width="100" height="550" as="geometry"/></mxCell>
+<mxCell id="fn" value="Finance consumer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="600" y="40" width="100" height="550" as="geometry"/></mxCell>
+<mxCell id="pg" value="Finance PostgreSQL" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="800" y="40" width="100" height="550" as="geometry"/></mxCell>
+<mxCell id="ld" value="Загрузчик статистики" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="1000" y="40" width="100" height="550" as="geometry"/></mxCell>
+<mxCell id="ch" value="ClickHouse" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="1180" y="40" width="100" height="550" as="geometry"/></mxCell>
+<mxCell id="2" value="GET показ / клик (подписанный URL)" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="usr" target="tr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="3" value="проверка подписи и схемы" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;curved=1;rounded=1;" edge="1" source="tr" target="tr" parent="1"><mxGeometry x="0.5" y="10" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+<mxCell id="4" value="Avro-событие (ack обязателен)" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="tr" target="kf" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="5" value="ack" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" source="kf" target="tr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="6" value="204" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" source="tr" target="usr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="7" value="чтение группы finance-ledger" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="kf" target="fn" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="8" value="вставка проводки по ключу" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="fn" target="pg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="9" value="ок / дубликат" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" source="pg" target="fn" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="10" value="commit offset" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="fn" target="kf" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="11" value="чтение группы stats-loader" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="kf" target="ld" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="12" value="пакет событий" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="ld" target="ch" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="13" value="commit offset" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="ld" target="kf" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>

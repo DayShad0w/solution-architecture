@@ -1,0 +1,31 @@
+<mxfile host="draw.io" type="device">
+<diagram name="Sequence — Bid request новой DSP">
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1600" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="dsp" value="DSP" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#DDEEFF;strokeColor=#08427B;participant=umlActor;" vertex="1" parent="1"><mxGeometry x="60" y="40" width="100" height="600" as="geometry"/></mxCell>
+<mxCell id="gw" value="Envoy" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="220" y="40" width="100" height="600" as="geometry"/></mxCell>
+<mxCell id="bid" value="Bidding Service" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="400" y="40" width="100" height="600" as="geometry"/></mxCell>
+<mxCell id="l1" value="L1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="560" y="40" width="100" height="600" as="geometry"/></mxCell>
+<mxCell id="rd" value="Redis" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="700" y="40" width="100" height="600" as="geometry"/></mxCell>
+<mxCell id="kf" value="Kafka" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;fontSize=11;fontStyle=1;fillColor=#E6E6E6;strokeColor=#666666;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="860" y="40" width="100" height="600" as="geometry"/></mxCell>
+<mxCell id="2" value="POST /openrtb/2.6/bid  (mTLS)" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="dsp" target="gw" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="3" value="сертификат, token bucket, дедлайн" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;curved=1;rounded=1;" edge="1" source="gw" target="gw" parent="1"><mxGeometry x="0.5" y="10" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+<mxCell id="4" value="BidRequest + дедлайн (≤ 70 ms)" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="gw" target="bid" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="5" value="разбор, отсечение по tmax" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;curved=1;rounded=1;" edge="1" source="bid" target="bid" parent="1"><mxGeometry x="0.5" y="10" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+<mxCell id="6" value="индекс кандидатов" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="bid" target="l1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="7" value="GET кандидатов (таймаут 4 ms)" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;" edge="1" source="bid" target="rd" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="8" value="проекция или таймаут" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" source="rd" target="bid" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="9" value="статус, pacing, правила" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;curved=1;rounded=1;" edge="1" source="bid" target="bid" parent="1"><mxGeometry x="0.5" y="10" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+<mxCell id="10" value="200 BidResponse / 204" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" source="bid" target="gw" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="11" value="200 / 204" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" source="gw" target="dsp" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="12" value="выборка аукциона (после ответа)" style="html=1;fontSize=9;fontColor=#333333;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" source="bid" target="kf" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="13" value="Campaign, Finance и PostgreSQL
+на этой диаграмме
+отсутствуют нарочно." style="shape=note;size=15;whiteSpace=wrap;html=1;fontSize=10;fillColor=#FFFFCC;strokeColor=#D4D4D4;fontColor=#333333;align=left;spacingLeft=5;" vertex="1" parent="1"><mxGeometry x="700" y="470" width="210" height="60" as="geometry"/></mxCell>
+
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>

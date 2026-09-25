@@ -1,0 +1,46 @@
+@startuml
+title Топики Kafka и группы потребителей
+
+queue "tracking.impressions\n7 суток" as imp
+queue "tracking.clicks\n7 суток" as clk
+queue "tracking.wins\n7 суток" as wins
+queue "campaign.lifecycle\ncompacted" as camp
+queue "budget.snapshots\ncompacted" as budget
+queue "rtb.auction\n24 часа, выборка" as auction
+
+component "Tracking Ingress" as tr
+component "Bidding Service" as bid
+component "Campaign Service" as cs
+component "Finance Service" as fs
+
+component "finance-ledger" as fin
+component "stats-loader" as loader
+component "bidding-projector" as proj
+component "auction-debug" as debug
+
+database "Finance PostgreSQL" as pg
+database "ClickHouse raw" as ch
+database "Redis" as redis
+
+tr --> imp
+tr --> clk
+tr --> wins
+bid --> auction : после ответа DSP
+cs --> camp
+fs --> budget
+
+imp --> fin
+clk --> fin
+fin --> pg : идемпотентная проводка
+
+imp --> loader
+clk --> loader
+wins --> loader
+loader --> ch
+
+camp --> proj
+budget --> proj
+proj --> redis
+
+auction --> debug
+@enduml

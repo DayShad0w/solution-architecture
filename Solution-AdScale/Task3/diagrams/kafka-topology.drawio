@@ -1,0 +1,51 @@
+<mxfile host="draw.io" type="device">
+<diagram name="Топики Kafka и группы потребителей">
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1600" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="tr" value="Tracking Ingress" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="bid" value="Bidding Service" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="40" y="100" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="cs" value="Campaign Service" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="fs" value="Finance Service" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#DDEEFF;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="40" y="220" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="imp" value="tracking.impressions
+7 суток" style="shape=mxgraph.flowchart.direct_data;whiteSpace=wrap;html=1;fontSize=10;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="20" width="200" height="40" as="geometry"/></mxCell>
+<mxCell id="clk" value="tracking.clicks
+7 суток" style="shape=mxgraph.flowchart.direct_data;whiteSpace=wrap;html=1;fontSize=10;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="70" width="200" height="40" as="geometry"/></mxCell>
+<mxCell id="wins" value="tracking.wins
+7 суток" style="shape=mxgraph.flowchart.direct_data;whiteSpace=wrap;html=1;fontSize=10;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="120" width="200" height="40" as="geometry"/></mxCell>
+<mxCell id="camp" value="campaign.lifecycle
+compacted" style="shape=mxgraph.flowchart.direct_data;whiteSpace=wrap;html=1;fontSize=10;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="180" width="200" height="40" as="geometry"/></mxCell>
+<mxCell id="bud" value="budget.snapshots
+compacted" style="shape=mxgraph.flowchart.direct_data;whiteSpace=wrap;html=1;fontSize=10;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="230" width="200" height="40" as="geometry"/></mxCell>
+<mxCell id="auc" value="rtb.auction
+24 часа, выборка" style="shape=mxgraph.flowchart.direct_data;whiteSpace=wrap;html=1;fontSize=10;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="280" width="200" height="40" as="geometry"/></mxCell>
+<mxCell id="cfin" value="finance-ledger" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#FFE6CC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="640" y="40" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="cldr" value="stats-loader" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#FFE6CC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="640" y="100" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="cprj" value="bidding-projector" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#FFE6CC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="640" y="200" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="cdbg" value="auction-debug" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#FFE6CC;strokeColor=#6C8EBF;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="640" y="280" width="170" height="40" as="geometry"/></mxCell>
+<mxCell id="pg" value="Finance PostgreSQL" style="shape=cylinder3;size=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#E6D0B8;strokeColor=#B09070;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="900" y="40" width="160" height="45" as="geometry"/></mxCell>
+<mxCell id="ch" value="ClickHouse raw" style="shape=cylinder3;size=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#E6D0B8;strokeColor=#B09070;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="900" y="100" width="160" height="45" as="geometry"/></mxCell>
+<mxCell id="rd" value="Redis" style="shape=cylinder3;size=8;whiteSpace=wrap;html=1;fontSize=11;fillColor=#E6D0B8;strokeColor=#B09070;fontColor=#333333;align=center;" vertex="1" parent="1"><mxGeometry x="900" y="200" width="160" height="45" as="geometry"/></mxCell>
+<mxCell id="2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="tr" target="imp" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="tr" target="clk" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="tr" target="wins" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="5" value="после ответа DSP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="bid" target="auc" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="cs" target="camp" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="fs" target="bud" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="imp" target="cfin" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="clk" target="cfin" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="imp" target="cldr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="clk" target="cldr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="wins" target="cldr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="camp" target="cprj" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="bud" target="cprj" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="auc" target="cdbg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="16" value="идемпотентная проводка" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="cfin" target="pg" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="cldr" target="ch" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#666666;strokeColor=#666666;" edge="1" source="cprj" target="rd" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>

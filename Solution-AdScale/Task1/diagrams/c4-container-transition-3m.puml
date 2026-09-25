@@ -1,0 +1,62 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_LEFT_RIGHT()
+
+title C4 Container — AdScale, переход 3 месяца
+
+Person(advertiser, "Рекламодатель", "По-прежнему работает в кабинете монолита")
+Person_Ext(endUser, "Пользователь", "Показ и клик объявления новой DSP")
+
+System_Ext(newDsp, "Новая DSP", "OpenRTB, ориентир P95 80 ms")
+System_Ext(oldDsp, "Текущие DSP", "Прежний контракт, путь через монолит")
+System_Ext(paymentGateway, "Платёжный шлюз", "Пополнение бюджета")
+
+System_Boundary(newPath, "Новый контур DSP") {
+    Container(gateway, "RTB API Gateway", "Envoy", "mTLS, лимит частоты, таймаут, размыкатель")
+    Container(bidding, "Bidding Service", "Go", "Кандидаты, аукцион и ответ без синхронной БД")
+    Container(tracking, "Tracking Ingress", "Go", "Приём показа, клика и win-notice")
+    Container(projector, "Проектор", "Go", "Снимок кампаний и бюджетов из монолита в Redis")
+}
+
+System_Boundary(monolith, "Монолит AdScale") {
+    Container(legacy, "Прежние модули", "C++ / Go / Python / Node.js", "Старые DSP, кабинет, финансы, отчёты")
+}
+
+ContainerDb(redis, "Redis", "Управляемый Redis", "Проекция кандидатов, креативы, остаток бюджета")
+ContainerQueue(kafka, "Kafka", "Управляемый Kafka", "Показы, клики, win-notice нового пути")
+ContainerDb(primary, "PostgreSQL primary", "Монолитная БД", "Учёт кампаний, денег и старых событий")
+ContainerDb(replica, "PostgreSQL replica", "Read replica", "Тяжёлые отчёты кабинета")
+
+Rel(newDsp, gateway, "Bid request", "HTTPS / OpenRTB")
+Rel(gateway, bidding, "Запрос с дедлайном", "HTTP внутри кластера")
+Rel(bidding, redis, "Чтение проекции", "RESP")
+Rel(bidding, kafka, "Событие аукциона после ответа", "асинхронно")
+Rel(endUser, tracking, "Показ, клик, win-notice", "HTTPS")
+Rel(tracking, kafka, "Событие до ответа пикселю", "Kafka")
+Rel(projector, primary, "Читает кампании и бюджеты", "SQL")
+Rel(projector, redis, "Обновляет проекцию", "RESP")
+
+Rel(oldDsp, legacy, "Прежний OpenRTB", "HTTPS")
+Rel(advertiser, legacy, "Кабинет", "HTTPS")
+Rel(legacy, paymentGateway, "Пополнение", "HTTPS")
+Rel(legacy, primary, "Ставки, деньги, старые события", "SQL")
+Rel(legacy, replica, "Отчёты", "SQL, только чтение")
+
+note right of bidding
+  Горячий путь новой DSP.
+  PostgreSQL синхронно не вызывается.
+end note
+
+note bottom of legacy
+  Текущие клиенты не переключаются,
+  пока новый путь не доказал паритет.
+end note
+
+legend right
+  Цель среза: 18 000 RPS на новом пути
+  P95 новой DSP не выше 80 ms
+  Откат: маршрут шлюза на монолит
+endlegend
+@enduml

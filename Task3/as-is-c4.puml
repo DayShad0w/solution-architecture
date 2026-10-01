@@ -1,0 +1,43 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Container — VitaStore AS-IS\nИсправлено по регламенту и тикетам. На вики был REST в SAP и один Ingenico.
+
+Person(cashier, "Кассир", "Сотрудник магазина")
+
+System_Boundary(hq, "Central Office, on-premise") {
+    Container(sap, "SAP ERP", "On-premise", "Товары, цены, лояльность, финансы, кадры")
+}
+
+System_Boundary(store, "Магазин") {
+    Container(pos, "POS App", "Windows, C#", "Толстый клиент. Логика чека и вшитые драйверы")
+    ContainerDb(localDb, "Local DB", "MS SQL на сервере в подсобке", "Цены, справочники, чеки магазина")
+    Container_Ext(kkt, "Фискальный регистратор", "COM", "ККТ. Свой драйвер у каждого вендора")
+    Container_Ext(pinpad, "Банковские терминалы", "USB", "Ingenico есть. Сбербанк ARCUS-2 — драйвера нет")
+}
+
+Rel(cashier, pos, "Работает с кассой", "UI")
+Rel(pos, localDb, "Читает цены, пишет чеки", "синхронно")
+Rel(pos, kkt, "Прямая печать", "COM-port driver")
+Rel(pos, pinpad, "Оплата", "USB driver")
+Rel(sap, localDb, "Прайс XML", "FTP, 02:00, не REST")
+Rel(pos, sap, "Баллы лояльности", "только online, иначе таймаут")
+
+note right of sap
+  На вики эта связь подписана
+  как real-time REST.
+  Регламент: ночной FTP.
+end note
+
+note bottom of pinpad
+  INC-8415: ARCUS-2,
+  оценка драйвера — 3 недели.
+end note
+
+note bottom of localDb
+  INC-8433: умер диск —
+  магазин стоит.
+end note
+@enduml

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_VitaStore" targetNamespace="http://vitastore.local/onboarding">
+  <bpmn:collaboration id="Collab_1">
+    <bpmn:participant id="Participant_Store" name="Магазин" processRef="Process_Store"/>
+    <bpmn:participant id="Participant_Match" name="Сервис сопоставления" processRef="Process_Match"/>
+    <bpmn:participant id="Participant_Human" name="Товаровед HQ" processRef="Process_Human"/>
+    <bpmn:participant id="Participant_Sap" name="SAP и Cloud POS" processRef="Process_Sap"/>
+    <bpmn:messageFlow id="Flow_File" sourceRef="Task_Extract" targetRef="Task_Parse"/>
+    <bpmn:messageFlow id="Flow_Barcode" sourceRef="Task_Barcode" targetRef="Task_Write"/>
+    <bpmn:messageFlow id="Flow_Fuzzy" sourceRef="Task_FuzzyAuto" targetRef="Task_Write"/>
+    <bpmn:messageFlow id="Flow_Queue" sourceRef="Gateway_Confidence" targetRef="Task_Queue"/>
+    <bpmn:messageFlow id="Flow_Decision" sourceRef="Task_Decision" targetRef="Task_Write"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Process_Store" isExecutable="false">
+    <bpmn:startEvent id="Start_Bought" name="Магазин куплен"/>
+    <bpmn:task id="Task_Extract" name="Снять номенклатуру коннектором и отправить в API"/>
+    <bpmn:sequenceFlow id="S1" sourceRef="Start_Bought" targetRef="Task_Extract"/>
+  </bpmn:process>
+  <bpmn:process id="Process_Match" isExecutable="false">
+    <bpmn:task id="Task_Parse" name="Разобрать файл"/>
+    <bpmn:exclusiveGateway id="Gateway_Barcode" name="Штрихкод есть в SAP?"/>
+    <bpmn:task id="Task_Barcode" name="Автопривязка по штрихкоду"/>
+    <bpmn:task id="Task_Fuzzy" name="Нечёткое сравнение названия"/>
+    <bpmn:exclusiveGateway id="Gateway_Confidence" name="Уверенность от 95% и цена не конфликтует?"/>
+    <bpmn:task id="Task_FuzzyAuto" name="Автопривязка по имени"/>
+    <bpmn:sequenceFlow id="M1" sourceRef="Task_Parse" targetRef="Gateway_Barcode"/>
+    <bpmn:sequenceFlow id="M2" name="да" sourceRef="Gateway_Barcode" targetRef="Task_Barcode"/>
+    <bpmn:sequenceFlow id="M3" name="нет" sourceRef="Gateway_Barcode" targetRef="Task_Fuzzy"/>
+    <bpmn:sequenceFlow id="M4" sourceRef="Task_Fuzzy" targetRef="Gateway_Confidence"/>
+    <bpmn:sequenceFlow id="M5" name="да" sourceRef="Gateway_Confidence" targetRef="Task_FuzzyAuto"/>
+  </bpmn:process>
+  <bpmn:process id="Process_Human" isExecutable="false">
+    <bpmn:task id="Task_Queue" name="Очередь исключений"/>
+    <bpmn:task id="Task_Decision" name="Подтвердить, отклонить или завести новый SKU"/>
+    <bpmn:sequenceFlow id="H1" sourceRef="Task_Queue" targetRef="Task_Decision"/>
+  </bpmn:process>
+  <bpmn:process id="Process_Sap" isExecutable="false">
+    <bpmn:task id="Task_Write" name="Записать принятое сопоставление в SAP"/>
+    <bpmn:task id="Task_Publish" name="Опубликовать каталог в Cloud POS этого магазина"/>
+    <bpmn:endEvent id="End_Open" name="Магазин можно открывать"/>
+    <bpmn:sequenceFlow id="P1" sourceRef="Task_Write" targetRef="Task_Publish"/>
+    <bpmn:sequenceFlow id="P2" sourceRef="Task_Publish" targetRef="End_Open"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_1">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collab_1">
+      <bpmndi:BPMNShape id="Shape_Store" bpmnElement="Participant_Store" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="900" height="160"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Match" bpmnElement="Participant_Match" isHorizontal="true">
+        <dc:Bounds x="160" y="240" width="900" height="280"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Human" bpmnElement="Participant_Human" isHorizontal="true">
+        <dc:Bounds x="160" y="520" width="900" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Sap" bpmnElement="Participant_Sap" isHorizontal="true">
+        <dc:Bounds x="160" y="700" width="900" height="200"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="Start_Bought">
+        <dc:Bounds x="230" y="130" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Extract" bpmnElement="Task_Extract">
+        <dc:Bounds x="320" y="110" width="220" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Parse" bpmnElement="Task_Parse">
+        <dc:Bounds x="230" y="280" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_BarcodeGw" bpmnElement="Gateway_Barcode" isMarkerVisible="true">
+        <dc:Bounds x="430" y="295" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Barcode" bpmnElement="Task_Barcode">
+        <dc:Bounds x="540" y="280" width="200" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Fuzzy" bpmnElement="Task_Fuzzy">
+        <dc:Bounds x="230" y="400" width="180" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Conf" bpmnElement="Gateway_Confidence" isMarkerVisible="true">
+        <dc:Bounds x="450" y="415" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_FuzzyAuto" bpmnElement="Task_FuzzyAuto">
+        <dc:Bounds x="540" y="400" width="200" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Queue" bpmnElement="Task_Queue">
+        <dc:Bounds x="250" y="560" width="200" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Decision" bpmnElement="Task_Decision">
+        <dc:Bounds x="520" y="560" width="240" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Write" bpmnElement="Task_Write">
+        <dc:Bounds x="250" y="750" width="240" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Publish" bpmnElement="Task_Publish">
+        <dc:Bounds x="540" y="750" width="260" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End" bpmnElement="End_Open">
+        <dc:Bounds x="850" y="772" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

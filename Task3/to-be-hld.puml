@@ -1,0 +1,58 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Container — VitaStore TO-BE\nТонкий клиент, HAL, облако. Локального сервера нет.
+
+Person(cashier, "Кассир", "Планшет")
+
+System_Boundary(edge, "Магазин") {
+    Container(webpos, "Web POS", "Браузер", "Тонкий клиент. USB и COM не открывает")
+    Container(agent, "Edge Agent", "Сервис у кассы", "Локальный кэш и очередь чеков")
+    Container(hal, "HAL / Device Gateway", "Локальный API", "Адаптеры ККТ и терминалов: Атол, Штрих, Сбербанк ARCUS-2, Альфа, Ingenico, Verifone")
+    ContainerDb(cache, "Локальный кэш", "SQLite", "Снимок каталога и неотправленные чеки")
+    Container_Ext(kkt, "ККТ", "COM / USB / LAN", "Фискальный чек без интернета")
+    Container_Ext(pinpad, "Платёжный терминал", "USB / LAN", "Карта только при живом канале в банк")
+}
+
+System_Boundary(cloud, "Облако") {
+    Container(gw, "API Gateway", "HTTPS", "Учётная запись магазина")
+    Container(posApi, "POS Backend", "Сервис", "Смена, чек, скидки")
+    Container(catalog, "Каталог и цены", "Сервис", "Снимок для магазина, цены SAP и Promo Engine")
+    Container(sync, "Синхронизация", "Сервис", "Пачка офлайн-чеков, ключ идемпотентности")
+    Container(fiscal, "Фискальный контур", "Сервис", "ОФД и архив, 54-ФЗ")
+    Container(orders, "Заказы и остатки", "Сервис", "Списание, Smart Fulfillment")
+    ContainerDb(pg, "PostgreSQL", "Управляемая", "Чеки и каталог сети вместо сотен локальных SQL")
+}
+
+System_Ext(sap, "SAP, Promo Engine, Smart Fulfillment", "Штаб-квартира, on-premise")
+
+Rel(cashier, webpos, "Чек", "UI")
+Rel(webpos, agent, "Операции кассы", "localhost")
+Rel(agent, hal, "Печать и оплата", "локальный API")
+Rel(hal, kkt, "Фискальный чек", "драйвер вендора")
+Rel(hal, pinpad, "Оплата картой", "драйвер банка")
+Rel(agent, cache, "Снимок и очередь", "локально")
+Rel(agent, gw, "Смена, каталог, досылка", "HTTPS")
+Rel(gw, posApi, "Чек онлайн", "HTTPS")
+Rel(gw, catalog, "Снимок каталога", "HTTPS")
+Rel(gw, sync, "Офлайн-пачка", "HTTPS")
+Rel(sync, pg, "Запись чека один раз", "SQL")
+Rel(posApi, pg, "Продажи", "SQL")
+Rel(catalog, sap, "Цены и акции", "интеграция")
+Rel(orders, sap, "Остатки и заказы", "интеграция")
+Rel(sync, fiscal, "Досылка в ОФД", "событие")
+
+note right of hal
+  Новый терминал —
+  новый адаптер.
+  Кассу не пересобирают.
+end note
+
+note bottom of cache
+  Наличные и фискальный чек
+  проходят без облака.
+  Карта и баллы чек не блокируют.
+end note
+@enduml

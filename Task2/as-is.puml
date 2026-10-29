@@ -1,0 +1,93 @@
+@startuml RetailCore AS-IS
+title RetailCore AS-IS\nГраницы по коду createOrder и интервью.\nУчебная схема использована как список участников, не как чертёж.
+
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam wrapWidth 220
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam ArrowColor #444444
+skinparam NoteBorderColor #888888
+skinparam NoteBackgroundColor #FFF8E8
+
+skinparam actor {
+  BorderColor #333333
+}
+
+skinparam rectangle {
+  BorderColor #555555
+  BackgroundColor #FFFFFF
+}
+
+skinparam component {
+  BorderColor #555555
+  BackgroundColor #F7F7F7
+}
+
+skinparam database {
+  BorderColor #8A6D1B
+  BackgroundColor #FFF4CC
+}
+
+left to right direction
+
+actor "Клиент" as Client
+actor "Оператор\nподдержки" as Support
+actor "Операционный\nблок" as Ops
+actor "Маркетинг,\nфинансы, операции" as Biz
+
+rectangle "Каналы" as Channels #FFFFFF {
+  component "Сайт и мобильное\nприложение" as Web
+  component "Маркетплейсы\nдругие ветки внутри метода" as MP
+}
+
+rectangle "RetailCore" as RC #FFFFFF {
+  component "Админка поддержки\nправка технического статуса" as Admin #FDECEC
+
+  rectangle "Java-монолит\nодин процесс-оркестратор" as Mono #FDECEC {
+    component "createOrder\nцена, промо, staging,\nмаршрут, резерв, оплата, статус" as Create #F8D0D0
+  }
+
+  database "Oracle\nORDERS\nlegacy_promo_pkg\nINT_ORDER_EXPORT\nRETRY_DELIVERY_QUEUE\nправила маршрута\nистория статусов" as Ora #FFF4CC
+
+  component ".NET\nчитает INT_ORDER_EXPORT" as Net #FDECEC
+  component "Python jobs и BI\nтяжёлые выборки\nиз операционной Oracle" as Py #FDECEC
+}
+
+cloud "Промо-сервис\nне на учебной схеме" as Promo #EAF4FF
+cloud "Платёжные\nпровайдеры" as Pay #EAF4FF
+cloud "Службы доставки\n4 способа обмена" as Del #EAF4FF
+cloud "Сервис наличия\nтолько слова техлида" as Stock #F4F4F4
+component "Витрины отчётов\nтри трактовки одного заказа" as Marts #EAF4FF
+
+Client --> Web : заказ, потом статус
+Client --> MP
+Web --> Create : sync
+MP --> Create : sync,\nсвои ветки
+Support --> Admin : разбор исключений
+Admin --> Ora : смена статуса,\nчасто мимо истории клиента
+Ops --> Ora : коэффициенты маршрута\nруками, иногда ночью
+
+Create --> Ora : save заказа\nпакет промо\nstaging NEW\nправило маршрута\nочередь повтора
+Create --> Promo : скидка\nне для всех заказов
+Create --> Del : sync reserveSlot\nтолько часть партнёров
+Create --> Pay : sync сессия оплаты
+Net --> Ora : чтение staging
+Net --> Del : партнёр через .NET
+Del --> Mono : подтверждения\nконтракт не приложен
+Py --> Ora : SQL и выгрузки\nконкурируют с checkout
+Marts --> Py
+Biz --> Marts : разные цифры\nодной кампании
+Stock ..> Create : вызов не найден\nни в коде, ни на схеме
+
+note bottom of Create
+  CONFIRMED в этом методе =\nплатёжная сессия создана.\nФормальный цикл техлида\n(reserved, paid, shipped)\nэтот фрагмент не пишет.
+  WAITING_MANUAL_REVIEW\nобрывает метод до резерва и оплаты.
+  При ошибке оплаты исключение\nбросается после save и после\nвставки в INT_ORDER_EXPORT.\nОбщая ли это транзакция — неизвестно.
+end note
+
+note bottom of Del
+  Синхронный вызов при создании,\nпачки, брокер, .NET.\nДубли заявок разбирают руками.\nИмя партнёра для первого шага\nв материалах не названо.
+end note
+
+@enduml

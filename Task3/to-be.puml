@@ -1,0 +1,66 @@
+@startuml RetailCore TO-BE first stage
+title RetailCore TO-BE, первый этап\nЖурнал фактов и история для поддержки.\nФасад партнёра и пилот показателя на эту схему не входят.
+
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam wrapWidth 220
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam ArrowColor #444444
+skinparam NoteBorderColor #888888
+skinparam NoteBackgroundColor #FFF8E8
+
+left to right direction
+
+actor "Клиент" as Client
+actor "Оператор\nподдержки" as Support
+
+rectangle "Каналы\nконтракт создания заказа прежний" as Channels #F5F5F5 {
+  component "Сайт, мобильное\nприложение, маркетплейсы" as Web
+}
+
+rectangle "RetailCore, первый этап" as RC {
+  rectangle "Java-монолит\nсистема записи заказа" as Mono #F5F5F5 {
+    component "createOrder\nцена, промо, маршрут,\nсинхронный резерв, оплата\nбез новых внешних вызовов" as Create #EEEEEE
+    component "Узкий факт\nлибо хвост уже\nсуществующей истории" as Fact #D5E8D4
+  }
+
+  database "Oracle\nстрока заказа, пакет промо,\nправила маршрута,\nINT_ORDER_EXPORT как сейчас" as Ora #FFF4CC
+  database "Журнал фактов\nне брокер и не система записи" as Journal #D5E8D4
+  component "История для поддержки\nсвоё хранилище,\nсобирается из журнала" as Timeline #D5E8D4
+  component "Админка\nпрежняя правка.\nИзвестные точки пишут факт" as Admin #F5F5F5
+  component ".NET и доставка\nв этот этап не входят" as OldInt #F5F5F5
+  component "Отчёты\nпо-прежнему читают Oracle" as Reports #F5F5F5
+}
+
+cloud "Промо-сервис\nи пакет Oracle\nоба на месте" as Promo #F5F5F5
+cloud "Платёжные\nпровайдеры" as Pay #F5F5F5
+cloud "Службы доставки\nпрежние четыре способа" as Del #F5F5F5
+
+Client --> Web
+Web --> Create : sync,\nкак сейчас
+Create --> Promo
+Create --> Pay
+Create --> Ora
+Create --> Fact
+Fact --> Journal
+Journal --> Timeline
+Support --> Timeline : где, что дальше,\nпочему. Иначе явная дыра
+Support --> Admin : старая карточка\nне выключена
+Admin --> Ora
+Admin --> Journal : только обёрнутые правки
+OldInt --> Ora
+OldInt --> Del
+Create --> Del : sync reserveSlot\nкак сейчас
+Reports --> Ora
+
+note bottom of Create
+  CONFIRMED остаётся сырым статусом,\nпока фаза 0 не согласует справочник.\nЭкран клиента в этот этап\nне переключается.
+  Факт пути промо пишется тем же\nфлагом вставки. Если вставку\nзапретят, этот факт не появляется,\nа история читает хвост статусов.
+end note
+
+note bottom of Timeline
+  При расхождении со строкой заказа\nправа Oracle.\nФасад партнёра и витрина показателя\nна первом этапе не строятся.
+end note
+
+@enduml

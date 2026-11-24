@@ -1,0 +1,37 @@
+@startuml Lab Results Data Flow
+title Поток данных: от готовности результата в LIS до появления в приложении
+
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #444444
+skinparam defaultTextAlignment center
+
+rectangle "LIS\n(результат готов)" as lis #EAF4FF
+rectangle "LIS Adapter / ACL\nCDC или опрос REST" as adapter #EAF4FF
+database "Outbox\n(таблица)" as outbox #FFF4CC
+rectangle "Relay\n(publisher)" as relay #FFFFFF
+queue "Kafka\nтопик lab.results.ready\n(партиции по patientId)" as kafka #E7F6EE
+rectangle "Lab Results Service\nидемпотентный консьюмер\n(dedup по resultId)" as svc #FFFFFF
+database "Read-модель\nрезультатов" as readdb #E7F6EE
+rectangle "CRM\n(для врачей)" as crm #EAF4FF
+queue "Уведомления\n(RabbitMQ)" as notify #FDECEC
+rectangle "API Gateway" as gw #FFFFFF
+actor "Пациент\n(Mobile App)" as patient
+queue "DLQ\nразбор вручную" as dlq #FDECEC
+
+lis --> adapter : результат готов
+adapter --> outbox : запись события\nв одной транзакции
+outbox --> relay : чтение
+relay --> kafka : publish LabResultReady
+kafka --> svc : consume (at-least-once)
+svc --> readdb : upsert по resultId
+svc --> crm : обновить карточку
+svc --> notify : "анализ готов"
+svc ..> dlq : poison message
+notify --> patient : push / SMS
+patient --> gw : GET /results
+gw --> svc : чтение из read-модели
+svc --> gw : результаты
+gw --> patient : ответ < 1 c
+
+@enduml

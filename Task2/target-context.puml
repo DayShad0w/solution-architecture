@@ -1,0 +1,55 @@
+@startuml Solution-Health TO-BE Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+title C4 Level 1 — Целевая контекстная диаграмма "Здоровье+" с мобильным приложением
+
+Person(patient, "Пациент", "Записывается, смотрит анализы, платит (мобильное приложение)")
+Person(doctor, "Врач", "Управляет расписанием, смотрит анализы")
+Person(lab, "Лаборант", "Просмотр результатов в LIS (контроль)")
+
+System(mobile, "Mobile App", "Новый клиент пациента: запись, анализы, оплата, полисы, пуши")
+System(portal, "Веб-портал", "Интерфейс для врачей и администраторов")
+
+System(gw, "API Gateway", "Единая точка входа: TLS, JWT, rate limiting, идемпотентность, маршрутизация/BFF")
+System(idp, "Identity Provider", "OAuth2/OIDC, выдача и проверка токенов")
+System(orch, "Booking Orchestrator", "Сага: запись + полис + оплата + резерв анализов, компенсации")
+System(policy, "Policy Service", "ACL + кэш + circuit breaker перед 1С")
+System(labresults, "Lab Results Service", "Приём событий LIS, read-модель результатов анализов")
+System_Boundary(bus_b, "Асинхронная шина") {
+  System(bus, "Event Bus (Kafka)", "События готовности анализов, outbox, DLQ")
+  System(notify, "Уведомления", "RabbitMQ + email/SMS/push провайдеры")
+}
+
+System(sched, "Расписание", "Слоты, запись, подтверждение/отмена (Java, REST, PostgreSQL)")
+System(crm, "CRM", "Карточки пациентов, результаты анализов (Java, REST, PostgreSQL)")
+System(lis, "LIS (Лабораторная)", "Результаты анализов (SOAP, FTP, REST)")
+System_Ext(c1, "1С: Полисы", "Проверка полиса ДМС (1С, HTTP-шлюз)")
+System_Ext(pay, "Платёжный шлюз", "Онлайн-платежи (внешний REST)")
+
+Rel(patient, mobile, "Пользуется", "мобильный клиент")
+Rel(doctor, portal, "Управляет расписанием, смотрит анализы", "HTTPS")
+Rel(lab, lis, "Просмотр результатов", "UI")
+
+Rel(mobile, gw, "Все запросы", "REST/HTTPS, Bearer JWT")
+Rel(portal, gw, "Запросы", "REST/HTTPS")
+Rel(gw, idp, "Проверка токена", "OIDC")
+Rel(gw, orch, "Запуск записи с оплатой", "sync, Idempotency-Key")
+Rel(gw, sched, "Чтение слотов/записей", "sync REST")
+Rel(gw, labresults, "Чтение результатов анализов", "sync REST")
+
+Rel(orch, sched, "Резерв/подтверждение слота", "sync, идемпотентно")
+Rel(orch, policy, "Проверка полиса", "sync REST")
+Rel(policy, c1, "Валидация полиса", "HTTP, CB+кэш")
+Rel(orch, pay, "Оплата", "sync + idempotency + webhook")
+Rel(pay, orch, "Итоговый статус платежа", "callback/webhook")
+Rel(orch, lis, "Резерв забора биоматериала", "sync через ACL")
+Rel(orch, notify, "Событие записи", "async AMQP")
+
+Rel(lis, bus, "LabResultReady", "async, outbox→Kafka")
+Rel(bus, labresults, "Потребление событий", "async, идемпотентно")
+Rel(labresults, crm, "Обновление результатов", "async")
+Rel(labresults, notify, "Готов анализ", "async AMQP")
+Rel(notify, patient, "Push / SMS / email", "async")
+
+@enduml

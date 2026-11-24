@@ -1,0 +1,170 @@
+openapi: 3.0.3
+info:
+  title: Здоровье+ Mobile API — Appointments
+  description: >
+    Фрагмент API мобильного приложения «Здоровье+». Endpoint получения
+    пациентом списка своих предстоящих записей к врачу. Версионирование — в URL
+    (/api/v1). Пагинация — offset/limit.
+  version: 1.0.0
+servers:
+  - url: https://api.zdorovie-plus.ru/api/v1
+    description: Production
+
+paths:
+  /appointments:
+    get:
+      summary: Список записей пациента
+      description: >
+        Возвращает записи текущего авторизованного пациента. По умолчанию —
+        предстоящие (status=upcoming). Пагинация через limit/offset.
+      operationId: listAppointments
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Фильтр по статусу записи.
+          required: false
+          schema:
+            type: string
+            enum: [upcoming, past, cancelled, all]
+            default: upcoming
+        - name: limit
+          in: query
+          description: Сколько записей вернуть (размер страницы).
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Сколько записей пропустить от начала выборки.
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Успешный ответ со списком записей и метаданными пагинации.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentsPage'
+              examples:
+                upcoming:
+                  summary: Две предстоящие записи
+                  value:
+                    data:
+                      - id: "a1b2c3d4"
+                        doctor: "Иванова О. П."
+                        specialty: "Кардиолог"
+                        clinic: "Москва, ул. Лесная, 7"
+                        startsAt: "2026-12-01T10:30:00+03:00"
+                        status: "upcoming"
+                      - id: "e5f6g7h8"
+                        doctor: "Петров С. А."
+                        specialty: "Терапевт"
+                        clinic: "Москва, ул. Лесная, 7"
+                        startsAt: "2026-12-05T14:00:00+03:00"
+                        status: "upcoming"
+                    pagination:
+                      limit: 20
+                      offset: 0
+                      total: 2
+        '401':
+          description: Токен отсутствует, истёк или недействителен.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  value:
+                    code: "unauthorized"
+                    message: "Требуется аутентификация. Предоставьте действительный Bearer-токен."
+        '500':
+          description: Внутренняя ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                serverError:
+                  value:
+                    code: "internal_error"
+                    message: "Временная ошибка сервиса. Повторите позже."
+                    traceId: "7f3a9c2e-1b4d-4a2e-9f01-7c2d5e6a8b90"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access-токен JWT, выданный Identity Provider (OAuth2/OIDC).
+
+  schemas:
+    Appointment:
+      type: object
+      required: [id, doctor, startsAt, status]
+      properties:
+        id:
+          type: string
+          example: "a1b2c3d4"
+        doctor:
+          type: string
+          example: "Иванова О. П."
+        specialty:
+          type: string
+          example: "Кардиолог"
+        clinic:
+          type: string
+          example: "Москва, ул. Лесная, 7"
+        startsAt:
+          type: string
+          format: date-time
+          example: "2026-12-01T10:30:00+03:00"
+        status:
+          type: string
+          enum: [upcoming, past, cancelled]
+
+    Pagination:
+      type: object
+      required: [limit, offset, total]
+      properties:
+        limit:
+          type: integer
+          example: 20
+        offset:
+          type: integer
+          example: 0
+        total:
+          type: integer
+          description: Общее число записей, подходящих под фильтр.
+          example: 2
+
+    AppointmentsPage:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Appointment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string
+          description: Идентификатор трассировки для диагностики (см. распределённый трейсинг).

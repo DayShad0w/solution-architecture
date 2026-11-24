@@ -1,0 +1,22 @@
+@startuml Offload 1C
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+title C4 Level 1 — Снижение нагрузки на 1С через Policy Service (кэш + CB + ACL)
+
+System(orch, "Booking Orchestrator", "Запрашивает проверку полиса в ходе саги")
+System(policy, "Policy Service", "Кэш полисов (TTL), circuit breaker, request collapsing, rate limit к 1С, ACL XML↔JSON")
+ContainerDb(cache, "Кэш полисов", "Redis", "Статусы полисов с TTL")
+System_Ext(c1, "1С: Полисы", "Проверка полиса ДМС (падает >50 RPS, зависает >30 с)")
+
+Rel(orch, policy, "checkPolicy(patientId)", "sync REST, JSON")
+Rel(policy, cache, "get/set статуса", "TTL")
+Rel(policy, c1, "Валидация при промахе кэша", "HTTP, ≤ лимита RPS, CB")
+
+note right of policy
+  Кэш гасит повторные запросы.
+  CB размыкается при всплеске ошибок 1С.
+  Fallback: отдать кэш или
+  "проверка отложена".
+end note
+@enduml

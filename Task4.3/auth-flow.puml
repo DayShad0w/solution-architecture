@@ -1,0 +1,37 @@
+@startuml Auth Flow
+title Аутентификация мобильного приложения: OAuth2/OIDC + PKCE
+
+actor "Пациент" as user
+participant "Mobile App\n(публичный клиент)" as app
+participant "Identity Provider\n(OAuth2/OIDC)" as idp
+participant "API Gateway" as gw
+participant "Backend\n(сервисы)" as svc
+
+user -> app : вход
+app -> app : сгенерировать code_verifier,\ncode_challenge (PKCE)
+app -> idp : Authorization Code request + code_challenge
+idp -> user : форма входа / согласие
+user -> idp : учётные данные
+idp --> app : authorization code
+app -> idp : обмен code + code_verifier
+idp --> app : access JWT (15 мин) + refresh token
+
+== Рабочие запросы ==
+app -> gw : запрос + Authorization: Bearer <JWT>\n(TLS, cert pinning)
+gw -> gw : проверка подписи, срок,\nissuer, audience, scope
+alt токен валиден
+  gw -> svc : запрос + контекст пользователя
+  svc --> gw : данные только этого пациента
+  gw --> app : 200 OK
+else токен невалиден/истёк
+  gw --> app : 401 Unauthorized
+  app -> idp : refresh token -> новый access JWT
+end
+
+note over gw, svc
+  Самодельных сессий нет.
+  Доступ к карте пациента — только
+  по токену с его идентификатором
+  (закрывает подмену сессии SD-007).
+end note
+@enduml

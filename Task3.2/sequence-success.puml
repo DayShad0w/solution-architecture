@@ -1,0 +1,43 @@
+@startuml Booking Saga Success
+title Запись к врачу с оплатой и резервом анализов — успешный сценарий (оркестрация)
+
+actor "Пациент\n(Mobile App)" as patient
+participant "API Gateway" as gw
+participant "Booking\nOrchestrator" as orch
+participant "Расписание" as sched
+participant "Policy Service\n(кэш+CB → 1С)" as policy
+participant "Платёжный\nшлюз" as pay
+participant "LIS\n(через ACL)" as lis
+queue "Уведомления" as notify
+
+patient -> gw : POST /api/v1/bookings\nBearer JWT, Idempotency-Key
+gw -> gw : проверка токена,\nдедуп по Idempotency-Key
+gw -> orch : StartBooking(sagaId)
+
+orch -> sched : reserveSlot(sagaId)
+sched --> orch : slotReserved
+
+orch -> policy : checkPolicy(patientId)
+policy --> orch : valid
+
+orch -> pay : charge(amount, idempotencyKey)
+pay --> orch : paid(paymentId)
+
+orch -> lis : reserveLabSlot(sagaId)
+lis --> orch : labSlotReserved
+
+orch -> sched : confirmBooking(sagaId)
+sched --> orch : confirmed
+
+orch ->> notify : BookingConfirmed (async)
+orch --> gw : 201 Created (bookingId)
+gw --> patient : подтверждение записи
+
+notify -->> patient : push "Запись подтверждена"
+
+note over orch
+  При сбое любого шага — компенсации
+  в обратном порядке:
+  releaseSlot, void/refund, cancelLabSlot.
+end note
+@enduml
